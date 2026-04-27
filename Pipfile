@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+playwright = "*"
 numpy = "<2.0"
 pylint = "*"
 streamlit = "*"

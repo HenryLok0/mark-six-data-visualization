@@ -6,7 +6,7 @@ on:
   push:
     paths:
       # Triggers only when relevant files are updated
-      - 'scrape.sh'
+      - 'scrape.py'
       - '.github/workflows/scrape-and-save.yml'
     branches:
       - master
@@ -22,12 +22,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13" # Github Actions 最新穩定版 (若 3.14 尚未完全支援)
+          
+      - name: Install dependencies and Playwright Browsers
+        run: |
+          pip install pipenv
+          pipenv install --skip-lock
+          # 我們在腳本中寫死了 channel="msedge"，所以要把它安裝到 Ubuntu 伺服器上
+          pipenv run playwright install msedge --with-deps
+
       - name: Fetch and save response from HKJC API
-        run:
-          bash scrape.sh
+        run: pipenv run python scrape.py
+        
       - name: Commit files
         run: |
           git config --global user.name "github-actions[bot]"
