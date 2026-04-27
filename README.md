@@ -15,7 +15,7 @@ The data automatically updated using GitHub actions everyday at 10:00 pm (Hong K
 ### 1. Setting up virtual environment
 
 ```bash
-pipenv --python 3.10.2
+pipenv --python 3.14
 ```
 
 ### 2. Installing dependencies
