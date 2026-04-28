@@ -87,6 +87,8 @@ def update_data(new_draws):
     added_count = 0
     
     for draw in new_draws:
+        # Check against the full drawing ID formatting in existing data 
+        # (old data format: id: "26/045", sometimes id may differ, we check date and id)
         if draw["id"] and draw["id"] not in existing_ids:
             all_data.append(draw)
             added_count += 1
