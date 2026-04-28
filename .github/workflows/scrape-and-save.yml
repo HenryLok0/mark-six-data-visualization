@@ -32,13 +32,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14" # 配合 Pipfile 的設定
+          python-version: "3.14" # Match Pipfile settings
 
       - name: Install dependencies and Playwright Browsers
         run: |
           pip install pipenv
           pipenv install --skip-lock
-          # 我們在腳本中寫死了 channel="msedge"，所以要把它安裝到 Ubuntu 伺服器上
+          # We hardcoded channel="msedge" in the script, so we need to install it on the Ubuntu runner
           pipenv run playwright install msedge --with-deps
 
       - name: Fetch and save response from HKJC API

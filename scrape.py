@@ -8,9 +8,9 @@ STATS_JSON_PATH = "data/stats.json"
 
 def fetch_hkjc_results():
     data = []
-    print("正在啟動微軟 Edge 虛擬瀏覽器...")
+    print("Launching Microsoft Edge virtual browser...")
     with sync_playwright() as p:
-        # headless=False 可以在開發時看到畫面，確認它是否被廣告擋住。這邊為了速度先設為 True
+        # headless=False can be used in development to see the screen and check for ads blocking it. Setted to True for speed here.
         browser = p.chromium.launch(channel="msedge", headless=True)
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -18,19 +18,19 @@ def fetch_hkjc_results():
         )
         page = context.new_page()
         
-        print("正在開啟香港賽馬會六合彩頁面...")
+        print("Opening HKJC Mark Six results page...")
         page.goto("https://bet.hkjc.com/ch/marksix/results", wait_until="networkidle", timeout=60000)
         
-        print("等待網頁 Javascript 渲染完成...")
+        print("Waiting for Javascript rendering on the page...")
         time.sleep(5)
         
-        print("直接從網頁 DOM 提取最新開獎紀錄...")
+        print("Extracting latest draw records directly from the web DOM...")
         
-        # 這裡是關鍵：透過 JS 把畫面上的開獎結果表格扒下來
+        # This is key: getting the lottery results table from the screen via JS
         extracted_data = page.evaluate('''() => {
             const results = [];
             
-            // 找出包含結果的區塊 (賽馬會目前的結構使用 .table-row)
+            // Find the sections containing the results (HKJC's current structure uses .table-row)
             const rows = document.querySelectorAll('.maraksx-results-table .table-row');
             
             rows.forEach(row => {
@@ -42,10 +42,10 @@ def fetch_hkjc_results():
                     let drawId = idEl.innerText.trim().replace(' EAS', ''); // e.g. 26/045
                     let drawDate = dateEl.innerText.trim(); // e.g. 25/04/2026
                     
-                    // 找出所有 <img> 標籤裡面的 alt 屬性，這就是開獎數字
+                    // Find the alt attribute in all <img> tags, this is the winning number
                     const numbers = Array.from(ballImages).map(img => img.getAttribute('alt'));
                     
-                    // 轉換日期格式變成 YYYY-MM-DD
+                    // Convert date format to YYYY-MM-DD
                     if (drawDate.includes("/")) {
                         const parts = drawDate.split("/");
                         if(parts.length === 3) {
@@ -53,7 +53,7 @@ def fetch_hkjc_results():
                         }
                     }
 
-                    // 取前 6 個常規號，第 7 個是特別號
+                    // Take the first 6 regular numbers, the 7th is the special number
                     results.push({
                         id: drawId,
                         date: drawDate,
@@ -94,16 +94,16 @@ def update_data(new_draws):
             added_count += 1
             
     if added_count == 0:
-        print("成功擷取畫面，但是沒有任何「新」資料需要更新。")
+        print("Screen captured successfully, but no 'new' data to update.")
         return
         
     all_data.sort(key=lambda x: x.get("date",""), reverse=True)
     
     with open(ALL_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(all_data, f, ensure_ascii=False, indent=2)
-    print(f"✅ 成功將 {added_count} 筆新開獎紀錄存入 {ALL_JSON_PATH}")
+    print(f"✅ Successfully saved {added_count} new draw records to {ALL_JSON_PATH}")
 
-    # ===== 計算 stats =====
+    # ===== Calculate stats =====
     stats_without_sno = {}
     stats_with_sno = {}
     stats_sno_only = {}
@@ -129,11 +129,11 @@ def update_data(new_draws):
     
     with open(STATS_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(stats_data, f, ensure_ascii=False, indent=2)
-    print(f"✅ 成功更新統計資料 {STATS_JSON_PATH}")
+    print(f"✅ Successfully updated statistics in {STATS_JSON_PATH}")
 
 if __name__ == "__main__":
     results = fetch_hkjc_results()
     if results:
         update_data(results)
     else:
-        print("未擷取到畫面資料，可能是網頁改版找不到表格與球標籤(.ball)。")
+        print("No data extracted from screen, the website layout might have changed.")
