@@ -1,10 +1,12 @@
 import json
 import os
-import time
 from playwright.sync_api import sync_playwright
 
 ALL_JSON_PATH = "data/all.json"
 STATS_JSON_PATH = "data/stats.json"
+HKJC_RESULTS_URL = "https://bet.hkjc.com/ch/marksix/results"
+RESULTS_TABLE_SELECTOR = ".maraksx-results-table .table-row"
+NAVIGATION_TIMEOUT_MS = 90000
 
 def fetch_hkjc_results():
     data = []
@@ -19,10 +21,16 @@ def fetch_hkjc_results():
         page = context.new_page()
         
         print("Opening HKJC Mark Six results page...")
-        page.goto("https://bet.hkjc.com/ch/marksix/results", wait_until="networkidle", timeout=60000)
-        
-        print("Waiting for Javascript rendering on the page...")
-        time.sleep(5)
+        # Use domcontentloaded instead of networkidle; HKJC keeps background requests
+        # alive and networkidle often never settles on CI runners.
+        page.goto(
+            HKJC_RESULTS_URL,
+            wait_until="domcontentloaded",
+            timeout=NAVIGATION_TIMEOUT_MS,
+        )
+
+        print("Waiting for results table to render...")
+        page.wait_for_selector(RESULTS_TABLE_SELECTOR, timeout=NAVIGATION_TIMEOUT_MS)
         
         print("Extracting latest draw records directly from the web DOM...")
         
